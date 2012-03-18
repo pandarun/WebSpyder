@@ -28,7 +28,7 @@ public class HTTPParser implements IParser {
 				frequency = this._pageWordCount.get(token);
 				this._pageWordCount.put(token, ++frequency);
 			} else {
-				this._pageWordCount.put(token, 1); 
+				this._pageWordCount.put(token, 1); // added comment
 			}
 
 		}
