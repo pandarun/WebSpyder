@@ -26,7 +26,7 @@ public class HTTPParser implements IParser {
 
 			if (this._pageWordCount.containsKey(token)) {
 				frequency = this._pageWordCount.get(token);
-				this._pageWordCount.put(token, ++frequency);
+				this._pageWordCount.put(token, ++frequency); // added another comment
 			} else {
 				this._pageWordCount.put(token, 1); // added comment
 			}
