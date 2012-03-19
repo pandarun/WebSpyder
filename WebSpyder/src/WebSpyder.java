@@ -1,9 +1,12 @@
 import java.io.IOException;
 import java.io.FileWriter;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.TreeMap;
 
 public class WebSpyder {
+	
+	private static  List<String> urlToVisit;
 
 	public static void main(String[] args) {
 
@@ -12,7 +15,14 @@ public class WebSpyder {
 		String url = args[1];
 
 		// page parsing here...
+		urlToVisit.add(url);
+		GrabManager manager = new GrabManager(urlToVisit);
+		manager.run();
 
+	}
+
+	@Deprecated
+	private static void singleThreadSpyder(String outputFile, String url) {
 		IGrabber grabber = HTTPGrabberFactory.getInstance().createGrabber();
 		IParser parser = HTTPParserFactory.getInstance().createParser();
 
@@ -26,9 +36,8 @@ public class WebSpyder {
 		} catch (IOException e) {
 			System.out.print(e.getMessage());
 		}
-
 	}
-
+	@Deprecated
 	private static void saveResultsToFile(String outputFile,
 			AbstractMap<String, Integer> pageWordCount) throws IOException {
 		// word - frequency file output
