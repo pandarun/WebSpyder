@@ -26,7 +26,6 @@ public class WebSpyder {
 		manager.run();		
 	}
 
-
 	@Deprecated
 	private static void saveResultsToFile(String outputFile,
 			AbstractMap<String, Integer> pageWordCount) throws IOException {
