@@ -26,22 +26,7 @@ public class WebSpyder {
 		manager.run();		
 	}
 
-	@Deprecated
-	private static void singleThreadSpyder(String outputFile, String url) {
-		IGrabber grabber = HTTPGrabberFactory.getInstance().createGrabber();
-		IParser parser = HTTPParserFactory.getInstance().createParser();
 
-		String textRestuls = grabber.grab(url);
-
-		TreeMap<String, Integer> pageWordCount = (TreeMap<String, Integer>) parser
-				.parse(textRestuls);
-
-		try {
-			saveResultsToFile(outputFile, pageWordCount);
-		} catch (IOException e) {
-			System.out.print(e.getMessage());
-		}
-	}
 	@Deprecated
 	private static void saveResultsToFile(String outputFile,
 			AbstractMap<String, Integer> pageWordCount) throws IOException {
