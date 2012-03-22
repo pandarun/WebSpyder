@@ -1,6 +1,7 @@
-import java.util.Collection;
+import java.util.concurrent.ConcurrentMap;
 
 public interface IGrabber {
 	public String grab(String url);
-	public Collection<String> links(); 	
+
+	public void addLinksTo(ConcurrentMap<String, Boolean> frontier);		
 }

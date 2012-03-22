@@ -1,5 +1,6 @@
 import java.io.IOException;
-import java.util.Collection;
+import java.util.concurrent.ConcurrentMap;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,7 +9,6 @@ import org.jsoup.select.Elements;
 public class HTTPGrabber implements IGrabber {
 	
 	private Document document;
-	private Collection<String> urlList;
 	
 	public String grab(String url) {
 				
@@ -24,14 +24,17 @@ public class HTTPGrabber implements IGrabber {
 		return textResults;
 	}
 
-	public  Collection<String> links() {		
+	public void addLinksTo(ConcurrentMap<String, Boolean> frontier) {		
 		
-		if(document == null) return null;		
+		if(document == null) return;		
 		
         Elements links = document.select("a[href]");
         for (Element element : links) {
-			this.urlList.add(element.text());
+        	
+        	String url = element.attr("abs:href");
+        	frontier.putIfAbsent(url, false);       	
+        	
 		}
-        return this.urlList;	
+        
 	}
 }

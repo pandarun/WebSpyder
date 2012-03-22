@@ -1,24 +1,29 @@
 import java.io.IOException;
 import java.io.FileWriter;
 import java.util.AbstractMap;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.TreeMap;
 
 public class WebSpyder {
 	
-	private static  List<String> urlToVisit;
-
+	private static  AbstractMap<String,Boolean> urlToVisit = new HashMap<String,Boolean>();	
+	
 	public static void main(String[] args) {
 
+		Execute(args);
+	}
+
+	private static void Execute(String[] args) {
 		// command line args...
 		String outputFile = args[0];
 		String url = args[1];
 
 		// page parsing here...
-		urlToVisit.add(url);
+		urlToVisit.put(url,false);
 		GrabManager manager = new GrabManager(urlToVisit);
-		manager.run();
-
+		manager.run();		
 	}
 
 	@Deprecated

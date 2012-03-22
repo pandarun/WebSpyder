@@ -1,13 +1,14 @@
 import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 public class HTTPParser implements IParser {
 
-	private TreeMap<String, Integer> _pageWordCount;
+	private AbstractMap<String, Integer> _pageWordCount;
 
 	public HTTPParser() {
-		this._pageWordCount = new TreeMap<String, Integer>();
+		this._pageWordCount = new HashMap<String, Integer>();
 	}
 
 	@Override
@@ -21,14 +22,13 @@ public class HTTPParser implements IParser {
 		Integer frequency = 0;
 		while (stk.hasMoreTokens()) {
 
-			token = stk.nextToken();
-			System.out.println(token);
+			token = stk.nextToken();			
 
 			if (this._pageWordCount.containsKey(token)) {
 				frequency = this._pageWordCount.get(token);
-				this._pageWordCount.put(token, ++frequency); // added another comment
+				this._pageWordCount.put(token, ++frequency); 
 			} else {
-				this._pageWordCount.put(token, 1); // added comment
+				this._pageWordCount.put(token, 1); 
 			}
 
 		}
