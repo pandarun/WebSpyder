@@ -24,7 +24,7 @@ public class HTTPGrabber implements IGrabber {
 		return textResults;
 	}
 
-	public void addLinksTo(ConcurrentMap<String, Boolean> frontier) {		
+	public void addLinksToFrontier(ConcurrentMap<String, Boolean> frontier) {		
 		
 		if(document == null) return;		
 		

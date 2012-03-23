@@ -16,12 +16,14 @@ public class WebSpyder {
 	}
 
 	private static void Execute(String[] args) {
-		// command line args...
+		
+		// get command line args...
 		String outputFile = args[0];
 		String url = args[1];
 
-		// page parsing here...
+		// add url to visit list and mark it as nonvisited.
 		urlToVisit.put(url,false);
+		
 		GrabManager manager = new GrabManager(urlToVisit);
 		manager.run();		
 	}

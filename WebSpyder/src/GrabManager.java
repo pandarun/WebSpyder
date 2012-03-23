@@ -25,14 +25,23 @@ public class GrabManager implements Runnable{
 	@Override
 	public void run() {	
 		
-		while (frontier.containsValue(false)) {						
-			String notMarkedUrl = getFirstKeyByValue(frontier, false);			
+		// repeat until exists nonmarked url  
+		while (frontier.containsValue(false)) {
+			
+			// get first non marked url
+			String notMarkedUrl = getFirstKeyByValue(frontier, false);
+			
 			System.out.println(notMarkedUrl);
+			
 			// mark link as visited
-			frontier.replace(notMarkedUrl, false, true);			
+			frontier.replace(notMarkedUrl, false, true);
+			
+			// create another thread with new url to crawl
 			threadPool.execute(new SpyderTask(notMarkedUrl));
 			try {
-				Thread.sleep(timeout);
+				
+				// wait between requests
+				Thread.sleep(timeout);				
 			} catch (InterruptedException e) {
 				System.out.println(e.getMessage());				
 				e.printStackTrace();
@@ -43,7 +52,7 @@ public class GrabManager implements Runnable{
 		shutdownAndAwaitTermination(threadPool);		
 	}
 	
-	// return first non marked key
+	// return first matched key by value
 	public static <T, E> T getFirstKeyByValue(Map<T, E> map, E value) {
 	     for (Entry<T, E> entry : map.entrySet()) {
 	         if (value.equals(entry.getValue())) {
@@ -83,18 +92,20 @@ public class GrabManager implements Runnable{
 		
 		public SpyderTask(String urlToVisit) {
 			grabber = HTTPGrabberFactory.getInstance().createGrabber();
-			parser = HTTPParserFactory.getInstance().createParser();
+			parser = HTTPGrabberFactory.getInstance().createParser();
 			
 			this.url = urlToVisit;
 		}
 
 		@Override
 		public void run() {
+			// get html string from grabber
 			String htmlResults = grabber.grab(url);
 
 			// find all links on page
-			grabber.addLinksTo(frontier);						
-					
+			grabber.addLinksToFrontier(frontier);
+			
+			// count words from html string					
 			pageWordCount = parser.parse(htmlResults);
 		}
 	}

@@ -1,4 +1,4 @@
-public class HTTPGrabberFactory implements IGrabberFactory {
+public class HTTPGrabberFactory implements IGrabberFactory,IParserFactory {
 
 	private static HTTPGrabberFactory _instance = null;
 
@@ -16,5 +16,12 @@ public class HTTPGrabberFactory implements IGrabberFactory {
 	public IGrabber createGrabber() {
 		return new HTTPGrabber();
 	}
+	
+	@Override
+	public IParser createParser() {
+
+		return new HTTPParser();
+	}
+
 
 }
