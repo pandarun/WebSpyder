@@ -1,7 +1,6 @@
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 public class HTTPParser implements IParser {
 

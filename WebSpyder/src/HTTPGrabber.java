@@ -1,6 +1,6 @@
 import java.io.IOException;
-import java.util.concurrent.ConcurrentMap;
-
+import java.util.AbstractCollection;
+import java.util.concurrent.BlockingQueue;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -24,16 +24,18 @@ public class HTTPGrabber implements IGrabber {
 		return textResults;
 	}
 
-	public void addLinksToFrontier(ConcurrentMap<String, Boolean> frontier) {		
+	public void addLinksToFrontier(BlockingQueue<String> frontier, AbstractCollection<String> visited) {		
 		
 		if(document == null) return;		
 		
         Elements links = document.select("a[href]");
         for (Element element : links) {
         	
-        	String url = element.attr("abs:href");
-        	frontier.putIfAbsent(url, false);       	
+        	String url = element.attr("abs:href");    	
         	
+        	if (!visited.contains(url) && !url.equals("")) {
+        		frontier.add(url);       	
+			}    	
 		}
         
 	}

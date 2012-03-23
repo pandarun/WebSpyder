@@ -1,67 +1,72 @@
-import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.*;
+import java.lang.Thread;;
 
 public class GrabManager implements Runnable{	 
 	
-	// url frontier to visit
-	private ConcurrentMap<String, Boolean> frontier;	
+	// url frontier to visit	
+	private BlockingQueue<String> frontier;
+	
+	// set of visited urls
+	private AbstractSet<String> visited;
 	
 	// amount of threads to create
 	private final int numberOfWorkers = 20;
 	
 	// timeout between requests
-	private final int timeout = 3000;
+	private final int timeout = 1000;
 	
 	// thread pool to create SpyderTask instances
 	private ExecutorService threadPool;
 
-	public GrabManager(Map<String,Boolean> urltToVisit)
+	public GrabManager(Collection<String> urltToVisit)
 	{
-		this.frontier = new ConcurrentHashMap<String,Boolean>(urltToVisit);
+		this.frontier = new LinkedBlockingDeque<String>(urltToVisit);
+		this.visited = new HashSet<String>();
 		threadPool = Executors.newFixedThreadPool(numberOfWorkers);
 	}	
 
 	@Override
 	public void run() {	
-		
-		// repeat until exists nonmarked url  
-		while (frontier.containsValue(false)) {
-			
-			// get first non marked url
-			String notMarkedUrl = getFirstKeyByValue(frontier, false);
-			
-			System.out.println(notMarkedUrl);
-			
-			// mark link as visited
-			frontier.replace(notMarkedUrl, false, true);
-			
-			// create another thread with new url to crawl
-			threadPool.execute(new SpyderTask(notMarkedUrl));
-			try {
-				
-				// wait between requests
-				Thread.sleep(timeout);				
-			} catch (InterruptedException e) {
-				System.out.println(e.getMessage());				
-				e.printStackTrace();
-			}
-		}	
-		
-		// end of crawling
-		shutdownAndAwaitTermination(threadPool);		
+
+		new Thread(
+				new Runnable() {					
+					@Override
+					public void run() {
+						// repeat until exists nonvisited url  
+						while (!threadPool.isShutdown()) {		
+
+							// dequeue link from frontier
+							
+							try {
+								
+							String nonVisitedUrl = frontier.take();								
+
+							System.out.println(nonVisitedUrl);			
+
+							// mark link as visited
+							visited.add(nonVisitedUrl);			
+
+							// create another thread with new url to crawl
+							Thread.sleep(timeout);
+							threadPool.execute(new SpyderTask(nonVisitedUrl));
+							
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+								shutdownAndAwaitTermination(threadPool);
+							}
+						}							
+					}
+				}).start();	
 	}
 	
-	// return first matched key by value
-	public static <T, E> T getFirstKeyByValue(Map<T, E> map, E value) {
-	     for (Entry<T, E> entry : map.entrySet()) {
-	         if (value.equals(entry.getValue())) {
-	             return entry.getKey();
-	         }
-	     }
-	     return null;
+	public void stop()
+	{
+		shutdownAndAwaitTermination(threadPool);
+		System.out.println("Service has been stopped");
 	}
-	
+		
 	// Thread pool shutdown routine
 	public void shutdownAndAwaitTermination(ExecutorService pool)
 	{
@@ -91,6 +96,7 @@ public class GrabManager implements Runnable{
 		private AbstractMap<String, Integer> pageWordCount;		
 		
 		public SpyderTask(String urlToVisit) {
+			
 			grabber = HTTPGrabberFactory.getInstance().createGrabber();
 			parser = HTTPGrabberFactory.getInstance().createParser();
 			
@@ -103,7 +109,7 @@ public class GrabManager implements Runnable{
 			String htmlResults = grabber.grab(url);
 
 			// find all links on page
-			grabber.addLinksToFrontier(frontier);
+			grabber.addLinksToFrontier(frontier,visited);
 			
 			// count words from html string					
 			pageWordCount = parser.parse(htmlResults);

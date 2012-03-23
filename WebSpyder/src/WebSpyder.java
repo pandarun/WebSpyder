@@ -1,14 +1,12 @@
 import java.io.IOException;
 import java.io.FileWriter;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.TreeMap;
+import java.util.LinkedList;
 
 public class WebSpyder {
 	
-	private static  AbstractMap<String,Boolean> urlToVisit = new HashMap<String,Boolean>();	
+	private static  Collection<String> urlToVisit = new LinkedList<String>();	
 	
 	public static void main(String[] args) {
 
@@ -22,10 +20,18 @@ public class WebSpyder {
 		String url = args[1];
 
 		// add url to visit list and mark it as nonvisited.
-		urlToVisit.put(url,false);
+		urlToVisit.add(url);
 		
 		GrabManager manager = new GrabManager(urlToVisit);
-		manager.run();		
+		manager.run();			
+		
+		try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		manager.stop();		
 	}
 
 	@Deprecated
