@@ -33,7 +33,7 @@ public class HTTPGrabber implements IGrabber {
         	
         	String url = element.attr("abs:href");    	
         	
-        	if (!visited.contains(url) && !url.equals("")) {
+        	if ( !url.equals("") && !visited.contains(url) ) {
         		frontier.add(url);       	
 			}    	
 		}

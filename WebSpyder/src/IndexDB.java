@@ -2,6 +2,11 @@
 import java.beans.PropertyVetoException;
 import java.sql.*;
 import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
+
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 
@@ -92,6 +97,61 @@ public class IndexDB {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	// returns collection of urls sorted by keyword frequency
+	public Collection<String> search(String keywordString)
+	{
+		// TODO : add multiple keyword search
+		// FIXME : fix search multiple keywords
+		
+		PreparedStatement pstmt = null;
+		Collection<String> searchResults = new LinkedList<String>();
+		
+		// split keyword string via spaces
+		StringTokenizer stk = new StringTokenizer(keywordString, " ", false);
+		List<String> keywords = new LinkedList<String>();
+		
+		while (stk.hasMoreElements()) {
+			String token = stk.nextToken();
+			keywords.add(token);			
+		}
+
+		// return collection of url sorted by keyword frequency
+		String sql = "(select url " +
+					 "from indexdb.Spyder " +
+					 "where token = '?'" + 
+					 "order by frequency) ";
+		
+		// building 'where part of statement'
+		StringBuilder stb = new StringBuilder(sql);		
+		Connection conn;
+		int index = 0;
+		
+		try {
+			
+			
+			conn = cpds.getConnection();			
+			
+			for (String string : keywords) {
+				stb.append("INTERSECT");
+				stb.append(sql);
+				
+			}		
+			
+			pstmt = conn.prepareStatement(sql);
+			
+			for (String keyword : keywords) {
+				pstmt.setString(++index, keyword);
+			}
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		return searchResults; 
 	}
 	
 	public void StopDB()
