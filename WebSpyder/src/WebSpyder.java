@@ -1,3 +1,4 @@
+import java.io.Console;
 import java.io.IOException;
 import java.io.FileWriter;
 import java.util.AbstractMap;
@@ -23,27 +24,9 @@ public class WebSpyder {
 		urlToVisit.add(url);
 		
 		GrabManager manager = new GrabManager(urlToVisit);
-		manager.run();			
+		manager.run();		
+				
 		
-		try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		manager.stop();		
-	}
-
-	@Deprecated
-	private static void saveResultsToFile(String outputFile,
-			AbstractMap<String, Integer> pageWordCount) throws IOException {
-		// word - frequency file output
-		FileWriter writer = new FileWriter(outputFile);
-		for (String key : pageWordCount.keySet()) {
-
-			writer.write(key + " " + pageWordCount.get(key) + "\n");
-		}
-
-		writer.close();
+		// manager.stop();		
 	}
 }

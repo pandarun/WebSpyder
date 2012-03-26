@@ -1,6 +1,9 @@
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
-import java.lang.Thread;;
+import java.lang.Thread;
+
+import com.mchange.v2.c3p0.impl.DbAuth;
 
 public class GrabManager implements Runnable{	 
 	
@@ -11,13 +14,16 @@ public class GrabManager implements Runnable{
 	private AbstractSet<String> visited;
 	
 	// amount of threads to create
-	private final int numberOfWorkers = 20;
+	private final int numberOfWorkers = Runtime.getRuntime().availableProcessors()*2;
 	
 	// timeout between requests
-	private final int timeout = 1000;
+	private final int timeout = 500;
 	
 	// thread pool to create SpyderTask instances
 	private ExecutorService threadPool;
+	
+	// url generation
+	private AtomicInteger generation = new AtomicInteger(1);
 
 	public GrabManager(Collection<String> urltToVisit)
 	{
@@ -33,34 +39,40 @@ public class GrabManager implements Runnable{
 				new Runnable() {					
 					@Override
 					public void run() {
-						// repeat until exists nonvisited url  
+						
+						IndexDB.getInstance().InitDB();
+						
+						// repeat until exists not visited url  
 						while (!threadPool.isShutdown()) {		
 
-							// dequeue link from frontier
-							
 							try {
-								
-							String nonVisitedUrl = frontier.take();								
 
-							System.out.println(nonVisitedUrl);			
+								// block until url arrives
+								String nonVisitedUrl = frontier.take();								
 
-							// mark link as visited
-							visited.add(nonVisitedUrl);			
+								System.out.println(nonVisitedUrl);			
 
-							// create another thread with new url to crawl
-							Thread.sleep(timeout);
-							threadPool.execute(new SpyderTask(nonVisitedUrl));
-							
+								// mark link as visited
+								visited.add(nonVisitedUrl);
+
+								Thread.sleep(timeout);
+
+								// create another thread with new url to crawl
+								threadPool.execute(new SpyderTask(nonVisitedUrl));							
+
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 								shutdownAndAwaitTermination(threadPool);
 							}
 						}							
+						
+						IndexDB.getInstance().StopDB();
 					}
 				}).start();	
 	}
 	
+	// stop GrabManager 
 	public void stop()
 	{
 		shutdownAndAwaitTermination(threadPool);
@@ -88,6 +100,7 @@ public class GrabManager implements Runnable{
 		}
 	}
 	
+	// utility class to carry out grabber and parser tasks
 	class SpyderTask implements Runnable
 	{
 		private IGrabber grabber;
@@ -108,11 +121,17 @@ public class GrabManager implements Runnable{
 			// get html string from grabber
 			String htmlResults = grabber.grab(url);
 
-			// find all links on page
-			grabber.addLinksToFrontier(frontier,visited);
+			// if generation not null : find all links on page and add to frontier
+			if (generation.get() !=0) {
+				generation.decrementAndGet();
+				grabber.addLinksToFrontier(frontier,visited);				
+			}			
 			
 			// count words from html string					
 			pageWordCount = parser.parse(htmlResults);
+			
+			IndexDB.getInstance().save(url, pageWordCount);
+
 		}
 	}
 	
