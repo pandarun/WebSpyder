@@ -59,16 +59,15 @@ public class IndexDB {
 		cpds.setMinPoolSize(MIN_POOL_SIZE); 
 		cpds.setAcquireIncrement(ACQUIRE_INCREMENT); 
 		cpds.setMaxPoolSize(MAX_POOL_SIZE);	
-	}
+			}
 
 	
 	public void save(String url,AbstractMap<String, Integer> pageWordCount) 
 	{		
 		PreparedStatement pstmt = null;
 		
-		try {
+		try {			
 			
-			System.out.println("Creating statement...");
 			Connection  conn= cpds.getConnection();
 			conn.setAutoCommit(false);
 			

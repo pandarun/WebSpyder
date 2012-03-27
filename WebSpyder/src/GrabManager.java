@@ -3,8 +3,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
 import java.lang.Thread;
 
-import com.mchange.v2.c3p0.impl.DbAuth;
-
 public class GrabManager implements Runnable{	 
 	
 	// url frontier to visit	
@@ -48,10 +46,9 @@ public class GrabManager implements Runnable{
 							try {
 
 								// block until url arrives
-								String nonVisitedUrl = frontier.take();								
+								String nonVisitedUrl = frontier.take();							
 
-								System.out.println(nonVisitedUrl);			
-
+								// TODO : add loggin here ...
 								// mark link as visited
 								visited.add(nonVisitedUrl);
 
