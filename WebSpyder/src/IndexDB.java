@@ -102,9 +102,6 @@ public class IndexDB {
 	// returns collection of urls sorted by keyword frequency
 	public Collection<String> search(String keywordString)
 	{
-		// TODO : add multiple keyword search
-		// FIXME : fix search multiple keywords
-		
 		PreparedStatement pstmt = null;
 		Collection<String> searchResults = new LinkedList<String>();
 		
@@ -118,40 +115,42 @@ public class IndexDB {
 		}
 
 		// return collection of url sorted by keyword frequency
-		String sql = "(select url " +
-					 "from indexdb.Spyder " +
-					 "where token = '?'" + 
-					 "order by frequency) ";
-		
-		// building 'where part of statement'
-		StringBuilder stb = new StringBuilder(sql);		
-		Connection conn;
-		int index = 0;
-		
+		StringBuilder stb = new StringBuilder("(select url " +
+											   "from indexdb.Spyder " +
+					 						   "where token = ? "); 
 		try {
 			
+			Connection conn = cpds.getConnection();			
 			
-			conn = cpds.getConnection();			
-			
-			for (String string : keywords) {
-				stb.append("INTERSECT");
-				stb.append(sql);
-				
+			// first subquery is already in stb
+			// so at every iteration stb is getting longer by one subquery with 'intersect'
+			for (int i = 0; i< keywords.size() -1 ; i++) {
+				stb.append(" or ");
+				stb.append(" token = ? ");
 			}		
 			
-			pstmt = conn.prepareStatement(sql);
+			stb.append("order by frequency) ");
 			
+			pstmt = conn.prepareStatement(stb.toString());
+
+			int index = 1;
 			for (String keyword : keywords) {
-				pstmt.setString(++index, keyword);
+				pstmt.setString(index++, keyword);
 			}
 			
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				searchResults.add(rs.getString("url"));
+			}
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			// TODO : Add logging here...
 			e.printStackTrace();
 		}
 			
 		return searchResults; 
+
 	}
 	
 	public void StopDB()

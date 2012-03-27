@@ -25,7 +25,7 @@ public class WebSpyder {
 		
 		GrabManager manager = new GrabManager(urlToVisit);
 		manager.run();		
-				
+		
 		
 		// manager.stop();		
 	}
