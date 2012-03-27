@@ -1,5 +1,3 @@
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.StringTokenizer;
@@ -34,19 +32,5 @@ public class HTTPParser implements IParser {
 
 		}
 		return this._pageWordCount;
-	}
-	
-	@Deprecated
-	private static void saveResultsToFile(String outputFile,
-			AbstractMap<String, Integer> pageWordCount) throws IOException {
-		// word - frequency file output
-		FileWriter writer = new FileWriter(outputFile);
-		for (String key : pageWordCount.keySet()) {
-
-			writer.write(key + " " + pageWordCount.get(key) + "\n");
-		}
-
-		writer.close();
-	}
-
+	}	
 }
