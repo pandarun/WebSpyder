@@ -62,6 +62,7 @@ public class IndexDB {
 		cpds.setMaxPoolSize(MAX_POOL_SIZE);	
 		
 		this.IsInited = true;
+		// TODO : add logging here
 	}
 
 	
@@ -85,9 +86,10 @@ public class IndexDB {
 			
 			pstmt.executeBatch();
 			conn.commit();
-		
+			// TODO : add logging here
 		} catch (SQLException e) {
 			// TODO: handle exception
+			// TODO : add logging here
 			e.printStackTrace();
 		}
 		finally
@@ -96,6 +98,7 @@ public class IndexDB {
 				pstmt.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
+				// TODO : add logging here
 				e.printStackTrace();
 			}
 		}
@@ -162,6 +165,7 @@ public class IndexDB {
 		if(!IsInited) return;
 		cpds.close();
 		this.IsInited = false;
+		// TODO : add logging here
 	}
 
 	public boolean isInited() {

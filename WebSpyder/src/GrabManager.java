@@ -51,6 +51,7 @@ public class GrabManager implements Runnable{
 								// TODO : add loggin here ...
 								// mark link as visited
 								visited.add(nonVisitedUrl);
+								// TODO : add logging here
 
 								Thread.sleep(timeout);
 
@@ -74,6 +75,7 @@ public class GrabManager implements Runnable{
 	{
 		shutdownAndAwaitTermination(threadPool);
 		System.out.println("Service has been stopped");
+		// TODO : add logging here
 	}
 		
 	// Thread pool shutdown routine
@@ -116,6 +118,7 @@ public class GrabManager implements Runnable{
 		@Override
 		public void run() {
 			// get html string from grabber
+			// TODO : add logging here
 			String htmlResults = grabber.grab(url);
 
 			// if generation not null : find all links on page and add to frontier

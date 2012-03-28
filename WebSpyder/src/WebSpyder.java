@@ -33,6 +33,7 @@ public class WebSpyder {
 		if (console == null) {
 			System.err.println("error! no console provided");
 			System.exit(-1);
+			// TODO : add logging here
 		}
 		
 		while (true) {

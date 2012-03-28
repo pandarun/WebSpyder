@@ -17,8 +17,10 @@ public class HTTPGrabber implements IGrabber {
 		try {
 			this.document = Jsoup.connect(url).get();
 			textResults = document.body().text();
+			// TODO : add logging here
 		} catch (IOException e) {
 			System.out.print(e.getMessage());
+			// TODO : add logging here
 		}
 
 		return textResults;
@@ -35,6 +37,7 @@ public class HTTPGrabber implements IGrabber {
         	
         	if ( !url.equals("") && !visited.contains(url) ) {
         		frontier.add(url);       	
+        		// TODO : add logging here
 			}    	
 		}
         
