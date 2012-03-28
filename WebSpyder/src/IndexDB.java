@@ -9,8 +9,6 @@ import java.util.StringTokenizer;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
-
-
 public class IndexDB {
 	
 	// JDBC driver name and DATABASE URL
@@ -36,30 +34,35 @@ public class IndexDB {
 	{
 		if(_instance == null) _instance = new IndexDB();
 		return _instance;
-	}	
+	}
+	
+	private boolean IsInited = false;
 	
 	private IndexDB()
 	{
 		 cpds = new ComboPooledDataSource();
 	}
 	
-	public void InitDB()
+	synchronized public void InitDB()
 	{
-		 
+		if(isInited()) return;
+		
 		try {
 			cpds.setDriverClass(JDBC_DRIVERNAME);
 		} catch (PropertyVetoException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}  
-		
+
 		cpds.setJdbcUrl( DB_URL ); 
 		cpds.setUser(USER); 
-		cpds.setPassword(PASS); // the settings below are optional -- c3p0 can work with defaults 
+		cpds.setPassword(PASS);  
 		cpds.setMinPoolSize(MIN_POOL_SIZE); 
 		cpds.setAcquireIncrement(ACQUIRE_INCREMENT); 
 		cpds.setMaxPoolSize(MAX_POOL_SIZE);	
-			}
+		
+		this.IsInited = true;
+	}
 
 	
 	public void save(String url,AbstractMap<String, Integer> pageWordCount) 
@@ -99,8 +102,12 @@ public class IndexDB {
 	}
 	
 	// returns collection of urls sorted by keyword frequency
-	public Collection<String> search(String keywordString)
+	public Collection<String> search(String keywordString) throws InterruptedException
 	{
+		while (!IsInited) {			
+			Thread.sleep(300);
+		}
+		
 		PreparedStatement pstmt = null;
 		Collection<String> searchResults = new LinkedList<String>();
 		
@@ -121,8 +128,7 @@ public class IndexDB {
 			
 			Connection conn = cpds.getConnection();			
 			
-			// first subquery is already in stb
-			// so at every iteration stb is getting longer by one subquery with 'intersect'
+			// adding keyword alternative for 'where' part of the query 			
 			for (int i = 0; i< keywords.size() -1 ; i++) {
 				stb.append(" or ");
 				stb.append(" token = ? ");
@@ -149,12 +155,17 @@ public class IndexDB {
 		}
 			
 		return searchResults; 
-
 	}
 	
 	public void StopDB()
 	{
+		if(!IsInited) return;
 		cpds.close();
+		this.IsInited = false;
+	}
+
+	public boolean isInited() {
+		return this.IsInited;
 	}
 	
 }
