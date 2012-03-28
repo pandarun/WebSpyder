@@ -45,7 +45,7 @@ public class IndexDB {
 	
 	synchronized public void InitDB()
 	{
-		if(isInited()) return;
+		if(this.IsInited) return;
 		
 		try {
 			cpds.setDriverClass(JDBC_DRIVERNAME);
