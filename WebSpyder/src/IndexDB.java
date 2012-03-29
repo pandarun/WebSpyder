@@ -1,30 +1,25 @@
 // STEP 1 : import requierd packages
 import java.beans.PropertyVetoException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.*;
 import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class IndexDB {
 	
-	// JDBC driver name and DATABASE URL
-	private static final String JDBC_DRIVERNAME = "com.mysql.jdbc.Driver";
-	private static final String DB_URL = "jdbc:mysql://chernykh.dyndns.org:3306/indexdb";
-
-	// Database credentials
-	
-	private static final String USER = "spyder";
-	private static final String PASS = "spyder123";
+	private static final String DB_CONFIG_FILE="/home/stanislav/git/WebSpyder/WebSpyder/lib/indexdb.xml";
 	
 	private ComboPooledDataSource cpds = null;
-	
-	private static final int MIN_POOL_SIZE = 5;
-	private static final int ACQUIRE_INCREMENT = 5;
-	private static final int MAX_POOL_SIZE = 20;
 	
 	private static final String SQL_STATEMENT = "insert into indexdb.Spyder(token,frequency,url) values(?,?,?)";
 	
@@ -36,43 +31,74 @@ public class IndexDB {
 		return _instance;
 	}
 	
-	private boolean IsInited = false;
+	private boolean IsInitialized = false;
+	private Logger log;
 	
 	private IndexDB()
 	{
 		 cpds = new ComboPooledDataSource();
+		 log = Logger.getLogger("main");
 	}
 	
 	synchronized public void InitDB()
 	{
-		if(this.IsInited) return;
-		
-		try {
-			cpds.setDriverClass(JDBC_DRIVERNAME);
-		} catch (PropertyVetoException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}  
-
-		cpds.setJdbcUrl( DB_URL ); 
-		cpds.setUser(USER); 
-		cpds.setPassword(PASS);  
-		cpds.setMinPoolSize(MIN_POOL_SIZE); 
-		cpds.setAcquireIncrement(ACQUIRE_INCREMENT); 
-		cpds.setMaxPoolSize(MAX_POOL_SIZE);	
-		
-		this.IsInited = true;
-		// TODO : add logging here
+		if(this.IsInitialized) return;
+		configureDB();
 	}
 
 	
+	private void configureDB() {
+		Properties properties = new Properties();
+		try {
+			properties.loadFromXML(new FileInputStream(DB_CONFIG_FILE));
+		} catch (InvalidPropertiesFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {			
+			e.printStackTrace();
+			System.exit(-1);
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		
+		String jdbc_drivername = properties.getProperty("jdbc_drivername");
+		String db_url = properties.getProperty("db_url");
+		String user = properties.getProperty("user");
+		String pass = properties.getProperty("pass");
+		int min_pool_size = Integer.parseInt(properties.getProperty("min_pool_size"));
+		int acquire_increment = Integer.parseInt(properties.getProperty("acquire_increment"));
+		int max_pool_size = Integer.parseInt(properties.getProperty("max_pool_size"));
+		
+		
+		try {
+			cpds.setDriverClass(jdbc_drivername);
+		} catch (PropertyVetoException e) {
+			log.error(e.getMessage());			
+		}
+
+		cpds.setJdbcUrl( db_url ); 
+		cpds.setUser(user); 
+		cpds.setPassword(pass);  
+		cpds.setMinPoolSize(min_pool_size); 
+		cpds.setAcquireIncrement(acquire_increment); 
+		cpds.setMaxPoolSize(max_pool_size);	
+		
+		this.IsInitialized = true;
+		log.info("DB initialized");
+		
+		
+	}
+
 	public void save(String url,AbstractMap<String, Integer> pageWordCount) 
 	{		
 		PreparedStatement pstmt = null;
+		Connection conn = null;
 		
 		try {			
 			
-			Connection  conn= cpds.getConnection();
+			conn= cpds.getConnection();
 			conn.setAutoCommit(false);
 			
 			pstmt = conn.prepareStatement(SQL_STATEMENT);
@@ -86,20 +112,17 @@ public class IndexDB {
 			
 			pstmt.executeBatch();
 			conn.commit();
-			// TODO : add logging here
+			
 		} catch (SQLException e) {
-			// TODO: handle exception
-			// TODO : add logging here
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		finally
 		{
-			try {
+			try {				
 				pstmt.close();
+				
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				// TODO : add logging here
-				e.printStackTrace();
+				log.error(e.getMessage());				
 			}
 		}
 	}
@@ -107,7 +130,7 @@ public class IndexDB {
 	// returns collection of urls sorted by keyword frequency
 	public Collection<String> search(String keywordString) throws InterruptedException
 	{
-		while (!IsInited) {			
+		while (!IsInitialized) {			
 			Thread.sleep(300);
 		}
 		
@@ -152,9 +175,7 @@ public class IndexDB {
 			}
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			// TODO : Add logging here...
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 			
 		return searchResults; 
@@ -162,14 +183,14 @@ public class IndexDB {
 	
 	public void StopDB()
 	{
-		if(!IsInited) return;
+		if(!IsInitialized) return;
 		cpds.close();
-		this.IsInited = false;
-		// TODO : add logging here
+		this.IsInitialized = false;
+		
 	}
 
-	public boolean isInited() {
-		return this.IsInited;
+	public boolean isInitialized() {
+		return this.IsInitialized;
 	}
 	
 }

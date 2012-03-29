@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.util.AbstractCollection;
 import java.util.concurrent.BlockingQueue;
+
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,6 +11,13 @@ import org.jsoup.select.Elements;
 public class HTTPGrabber implements IGrabber {
 	
 	private Document document;
+	private Logger log;
+	
+	
+	public HTTPGrabber()
+	{
+		log = Logger.getLogger("main");
+	}
 	
 	public String grab(String url) {
 				
@@ -17,10 +26,9 @@ public class HTTPGrabber implements IGrabber {
 		try {
 			this.document = Jsoup.connect(url).get();
 			textResults = document.body().text();
-			// TODO : add logging here
+			log.info("results obtained");
 		} catch (IOException e) {
-			System.out.print(e.getMessage());
-			// TODO : add logging here
+			log.error(e.getMessage());
 		}
 
 		return textResults;
@@ -37,7 +45,7 @@ public class HTTPGrabber implements IGrabber {
         	
         	if ( !url.equals("") && !visited.contains(url) ) {
         		frontier.add(url);       	
-        		// TODO : add logging here
+        		
 			}    	
 		}
         

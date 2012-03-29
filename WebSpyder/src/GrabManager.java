@@ -3,6 +3,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
 import java.lang.Thread;
 
+import org.apache.log4j.Logger;
+
 public class GrabManager implements Runnable{	 
 	
 	// url frontier to visit	
@@ -21,10 +23,13 @@ public class GrabManager implements Runnable{
 	private ExecutorService threadPool;
 	
 	// url generation
-	private AtomicInteger generation = new AtomicInteger(1);
+	private AtomicInteger generation = new AtomicInteger(0);
+	
+	private Logger log;
 
 	public GrabManager(Collection<String> urltToVisit)
 	{
+		log = Logger.getLogger("main");
 		this.frontier = new LinkedBlockingDeque<String>(urltToVisit);
 		this.visited = new HashSet<String>();
 		threadPool = Executors.newFixedThreadPool(numberOfWorkers);
@@ -46,21 +51,20 @@ public class GrabManager implements Runnable{
 							try {
 
 								// block until url arrives
-								String nonVisitedUrl = frontier.take();							
+								String nonVisitedUrl = frontier.take();	
+								if(frontier.isEmpty()) log.info("frontier is empty");
 
-								// TODO : add loggin here ...
-								// mark link as visited
-								visited.add(nonVisitedUrl);
-								// TODO : add logging here
+								log.info("visiting "+nonVisitedUrl);
+								
+								visited.add(nonVisitedUrl);								
 
 								Thread.sleep(timeout);
 
 								// create another thread with new url to crawl
 								threadPool.execute(new SpyderTask(nonVisitedUrl));							
 
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+							} catch (InterruptedException e) {								
+								log.error(e.getMessage());
 								shutdownAndAwaitTermination(threadPool);
 							}
 						}							
@@ -68,14 +72,13 @@ public class GrabManager implements Runnable{
 						IndexDB.getInstance().StopDB();
 					}
 				}).start();	
+		log.info("manager started");
 	}
 	
 	// stop GrabManager 
 	public void stop()
 	{
-		shutdownAndAwaitTermination(threadPool);
-		System.out.println("Service has been stopped");
-		// TODO : add logging here
+		shutdownAndAwaitTermination(threadPool);		
 	}
 		
 	// Thread pool shutdown routine
@@ -85,10 +88,10 @@ public class GrabManager implements Runnable{
 		pool.shutdown();
 		try {
 			// wait a while for existing task to terminate
-			if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+			if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
 				// cancel currently executing tasks
 				pool.shutdownNow();
-				if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+				if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
 					System.err.println("Pool did not terminate");
 				}
 			}			
@@ -105,7 +108,8 @@ public class GrabManager implements Runnable{
 		private IGrabber grabber;
 		private IParser  parser;
 		private String	 url;
-		private AbstractMap<String, Integer> pageWordCount;		
+		private AbstractMap<String, Integer> pageWordCount;
+		private Logger log;
 		
 		public SpyderTask(String urlToVisit) {
 			
@@ -113,12 +117,14 @@ public class GrabManager implements Runnable{
 			parser = HTTPGrabberFactory.getInstance().createParser();
 			
 			this.url = urlToVisit;
+			
+			log = Logger.getLogger("main");
 		}
 
 		@Override
 		public void run() {
 			// get html string from grabber
-			// TODO : add logging here
+			log.info("job started:" + url);
 			String htmlResults = grabber.grab(url);
 
 			// if generation not null : find all links on page and add to frontier
