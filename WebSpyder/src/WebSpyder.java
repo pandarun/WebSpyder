@@ -14,26 +14,29 @@ public class WebSpyder {
 	static final Logger log =Logger.getLogger("main");
 	static final String LOG_PROPERTIES_FILE = "/home/stanislav/git/WebSpyder/WebSpyder/lib/Log4J.properties";
 	
-	private static  Collection<String> urlToVisit = new LinkedList<String>();	
+	private static  Collection<String> urlToVisit = new LinkedList<String>();
 	
 	public static void main(String[] args) throws InterruptedException {
-
 		Execute(args);
 	}
 
 	private static void Execute(String[] args) throws InterruptedException {
-		
+		urlToVisit.add(args[0]);
 		initializeLogger();
-		// get command line args...		
-		String url = args[0];
-
-		// add url to visit list and mark it as nonvisited.
-		urlToVisit.add(url);
-		
-		GrabManager manager = new GrabManager(urlToVisit);
-		manager.run();		
+		initManager();
 		processSearch();	
-		manager.stop();		
+		stopSearch();
+	}
+
+	private static void initManager() {
+		IndexDB.getInstance().InitDB();		
+		GrabManager.GetInstance().Init(urlToVisit);
+		GrabManager.GetInstance().run();
+	}
+
+	private static void stopSearch() {		
+		GrabManager.GetInstance().stop();		
+		IndexDB.getInstance().StopDB();
 	}
 
 	private static void initializeLogger() {

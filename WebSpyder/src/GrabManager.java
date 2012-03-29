@@ -1,49 +1,90 @@
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.Thread;
 
 import org.apache.log4j.Logger;
 
-public class GrabManager implements Runnable{	 
+public class GrabManager implements Runnable {	 
 	
+	private static GrabManager _instance;
+	
+	public static GrabManager GetInstance()
+	{
+		if(_instance == null)
+		{
+			_instance = new GrabManager();
+		}
+		return _instance;
+	}
+	
+	private static final String manager_properties = "/home/stanislav/git/WebSpyder/WebSpyder/lib/manager.properties";
+
 	// url frontier to visit	
 	private BlockingQueue<String> frontier;
 	
 	// set of visited urls
-	private AbstractSet<String> visited;
-	
-	// amount of threads to create
-	private final int numberOfWorkers = Runtime.getRuntime().availableProcessors()*2;
-	
-	// timeout between requests
-	private final int timeout = 500;
+	private AbstractSet<String> visited;	
 	
 	// thread pool to create SpyderTask instances
-	private ExecutorService threadPool;
-	
-	// url generation
-	private AtomicInteger generation = new AtomicInteger(0);
+	private ExecutorService threadPool;	
 	
 	private Logger log;
 
-	public GrabManager(Collection<String> urltToVisit)
+	private AtomicInteger generation;
+	
+	private int timeout;
+	
+	private boolean isInitialized;
+	
+	private GrabManager()
 	{
-		log = Logger.getLogger("main");
-		this.frontier = new LinkedBlockingDeque<String>(urltToVisit);
+		log = Logger.getLogger("main");		
 		this.visited = new HashSet<String>();
-		threadPool = Executors.newFixedThreadPool(numberOfWorkers);
+		this.isInitialized = false;
+		configureManager();
+		
 	}	
+	
+	public void Init(Collection<String> urltToVisit)
+	{
+		if(this.isInitialized) return;
+		this.frontier = new LinkedBlockingDeque<String>(urltToVisit);
+	}
+
+	private void configureManager() {
+		Properties prop = new Properties();
+		try {
+			prop.load(new FileInputStream(manager_properties));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		int number_of_workers = Integer.parseInt(prop.getProperty("number_of_workers"));	
+		int max_generation = Integer.parseInt(prop.getProperty("max_generation"));
+		this.timeout = Integer.parseInt(prop.getProperty("timeout"));
+		
+		threadPool = Executors.newFixedThreadPool(number_of_workers);
+		this.generation = new AtomicInteger(max_generation);
+		
+		
+	}
 
 	@Override
+	
 	public void run() {	
-
+		if(!this.isInitialized) return;
 		new Thread(
 				new Runnable() {					
 					@Override
 					public void run() {
-						
-						IndexDB.getInstance().InitDB();
 						
 						// repeat until exists not visited url  
 						while (!threadPool.isShutdown()) {		
@@ -67,9 +108,7 @@ public class GrabManager implements Runnable{
 								log.error(e.getMessage());
 								shutdownAndAwaitTermination(threadPool);
 							}
-						}							
-						
-						IndexDB.getInstance().StopDB();
+						}
 					}
 				}).start();	
 		log.info("manager started");
@@ -77,8 +116,9 @@ public class GrabManager implements Runnable{
 	
 	// stop GrabManager 
 	public void stop()
-	{
-		shutdownAndAwaitTermination(threadPool);		
+	{	
+		if(!this.isInitialized) return;
+		shutdownAndAwaitTermination(threadPool);
 	}
 		
 	// Thread pool shutdown routine
@@ -136,7 +176,10 @@ public class GrabManager implements Runnable{
 			// count words from html string					
 			pageWordCount = parser.parse(htmlResults);
 			
-			IndexDB.getInstance().save(url, pageWordCount);
+			if(IndexDB.getInstance().isInitialized())
+			{
+				IndexDB.getInstance().save(url, pageWordCount);
+			}
 
 		}
 	}

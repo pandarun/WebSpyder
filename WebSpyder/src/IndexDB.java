@@ -129,11 +129,7 @@ public class IndexDB {
 	
 	// returns collection of urls sorted by keyword frequency
 	public Collection<String> search(String keywordString) throws InterruptedException
-	{
-		while (!IsInitialized) {			
-			Thread.sleep(300);
-		}
-		
+	{		
 		PreparedStatement pstmt = null;
 		Collection<String> searchResults = new LinkedList<String>();
 		
