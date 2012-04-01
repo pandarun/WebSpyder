@@ -18,14 +18,13 @@ public class WebSpyder {
 	
 	private static  Collection<String> urlToVisit = new LinkedList<String>();
 	
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args)  {
 		Execute(args);
 	}
 
-	private static void Execute(String[] args) throws InterruptedException {
+	private static void Execute(String[] args)  {
 		initializeApp(args);		
-		 //processSearch();
-		Thread.sleep(20000);
+		processSearch();
 		stopSearch();
 	
 	}
