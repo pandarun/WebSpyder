@@ -4,33 +4,35 @@ import java.util.StringTokenizer;
 
 public class HTTPParser implements IParser {
 
-	private AbstractMap<String, Integer> _pageWordCount;
-
-	public HTTPParser() {
-		this._pageWordCount = new HashMap<String, Integer>();
-	}
+	public HTTPParser() {}
 
 	@Override
 	public AbstractMap<String, Integer> parse(String text) {
+		if (text == null ) { return null;}		
+		return parsed(text);
+	}
 
-		StringTokenizer stk = new StringTokenizer(text,
-				" \t\n\r\f.,:-–_?!№—«»“©@!#$%^&~`'\"0123456789()[]{}*/←→↓",
-				false);
+	private AbstractMap<String, Integer>  parsed(String text) {
+		
+		AbstractMap<String, Integer> _pageWordCount =  new HashMap<String, Integer>();;
+		
+		StringTokenizer stk = new StringTokenizer(	text,
+													" \t\n\r\f.,:-–_?!№—«»“©@!#$%^&~`'\"0123456789()[]{}*/←→↓",
+													false);
 
 		String token = null;
 		Integer frequency = 0;
 		while (stk.hasMoreTokens()) {
-
 			token = stk.nextToken();			
 
-			if (this._pageWordCount.containsKey(token)) {
-				frequency = this._pageWordCount.get(token);
-				this._pageWordCount.put(token, ++frequency); 
+			if (_pageWordCount.containsKey(token)) {
+				frequency = _pageWordCount.get(token);
+				_pageWordCount.put(token, ++frequency); 
 			} else {
-				this._pageWordCount.put(token, 1); 
+				_pageWordCount.put(token, 1); 
 			}
-
+			
 		}
-		return this._pageWordCount;
+		return _pageWordCount;
 	}	
 }

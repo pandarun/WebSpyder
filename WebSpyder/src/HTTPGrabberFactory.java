@@ -19,7 +19,6 @@ public class HTTPGrabberFactory implements IGrabberFactory,IParserFactory {
 	
 	@Override
 	public IParser createParser() {
-
 		return new HTTPParser();
 	}
 

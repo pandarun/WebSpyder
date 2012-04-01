@@ -1,18 +1,20 @@
+import java.io.BufferedReader;
 import java.io.Console;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Properties;
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 public class WebSpyder {
 	
 	static final Logger log =Logger.getLogger("main");
-	static final String LOG_PROPERTIES_FILE = "/home/stanislav/git/WebSpyder/WebSpyder/lib/Log4J.properties";
+	static String LOG_PROPERTIES_FILE;
+	static String URL_LIST;
 	
 	private static  Collection<String> urlToVisit = new LinkedList<String>();
 	
@@ -21,11 +23,42 @@ public class WebSpyder {
 	}
 
 	private static void Execute(String[] args) throws InterruptedException {
-		urlToVisit.add(args[0]);
-		initializeLogger();
-		initManager();
-		processSearch();	
+		initializeApp(args);		
+		 //processSearch();
+		Thread.sleep(20000);
 		stopSearch();
+	
+	}
+
+	private static void initializeApp(String[] args) {
+
+		LOG_PROPERTIES_FILE = (args!= null && args.length>0) ? args[0] : "/home/stanislav/git/WebSpyder/WebSpyder/lib/Log4J.properties";
+		URL_LIST = (args!=null &&  args.length>1 ) ? args[1] : "/home/stanislav/git/WebSpyder/WebSpyder/lib/url.lst";
+		
+		initializeLogger();
+
+		try {
+			
+			FileReader fr = new FileReader(URL_LIST);
+			BufferedReader urlReader = new BufferedReader(fr);
+			
+			String url;
+			while((url = urlReader.readLine()) != null)
+			{
+				urlToVisit.add(url);
+			}
+			urlReader.close();
+			
+		} catch (FileNotFoundException e) {
+			log.fatal(e.getMessage());			
+			System.exit(-1);
+		} catch (IOException e) {
+			log.fatal(e.getMessage());
+			System.exit(-1);
+		}
+		
+		initManager();
+		
 	}
 
 	private static void initManager() {
@@ -41,8 +74,7 @@ public class WebSpyder {
 
 	private static void initializeLogger() {
 		Properties logProperties = new Properties();
-		
-		// load our log4j properties / configuration file 
+
 		try {			
 			logProperties.load(new FileInputStream(LOG_PROPERTIES_FILE));			
 			PropertyConfigurator.configure(logProperties);
@@ -66,18 +98,14 @@ public class WebSpyder {
 			System.exit(-1);
 		}
 		
-		while (true) {
+		while (!Thread.interrupted()) {
 			System.out.println("enter phrase : ");
 			
 			input = console.readLine();
-			if(input.contains("1")) return;
+			if(input.contains(":exit")) return;
 			
-			try {
-				results = IndexDB.getInstance().search(input);
-			} catch (InterruptedException e) {
-				log.error(e.getMessage());
-				
-			}
+			results = IndexDB.getInstance().search(input);
+			
 			for (String result : results) {
 				System.out.println(result);
 			}

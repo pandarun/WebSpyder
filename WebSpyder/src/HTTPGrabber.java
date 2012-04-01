@@ -25,10 +25,10 @@ public class HTTPGrabber implements IGrabber {
 
 		try {
 			this.document = Jsoup.connect(url).get();
-			textResults = document.body().text();
-			log.info("results obtained");
-		} catch (IOException e) {
+			textResults = document.body().text();			
+		} catch (IOException e) {			
 			log.error(e.getMessage());
+			Thread.currentThread().interrupt();
 		}
 
 		return textResults;
@@ -36,16 +36,16 @@ public class HTTPGrabber implements IGrabber {
 
 	public void addLinksToFrontier(BlockingQueue<String> frontier, AbstractCollection<String> visited) {		
 		
-		if(document == null) return;		
+		if(this.document == null) return;		
 		
-        Elements links = document.select("a[href]");
+        Elements links = this.document.select("a[href]");
         for (Element element : links) {
         	
-        	String url = element.attr("abs:href");    	
+        	String url = element.attr("abs:href");
         	
-        	if ( !url.equals("") && !visited.contains(url) ) {
+        	if ( url != null && !url.equals("") && !visited.contains(url)  ) {
         		frontier.add(url);       	
-        		
+        		log.info(url + " : added to frontier");
 			}    	
 		}
         

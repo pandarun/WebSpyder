@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 public class GrabManager implements Runnable {	 
 	
 	private static GrabManager _instance;
-	
 	public static GrabManager GetInstance()
 	{
 		if(_instance == null)
@@ -22,37 +21,23 @@ public class GrabManager implements Runnable {
 	}
 	
 	private static final String manager_properties = "/home/stanislav/git/WebSpyder/WebSpyder/lib/manager.properties";
-
-	// url frontier to visit	
 	private BlockingQueue<String> frontier;
-	
-	// set of visited urls
 	private AbstractSet<String> visited;	
-	
-	// thread pool to create SpyderTask instances
 	private ExecutorService threadPool;	
-	
 	private Logger log;
-
-	private AtomicInteger generation;
-	
-	private int timeout;
-	
+	private AtomicInteger generation;	
 	private boolean isInitialized;
 	
-	private GrabManager()
-	{
-		log = Logger.getLogger("main");		
-		this.visited = new HashSet<String>();
-		this.isInitialized = false;
-		configureManager();
-		
-	}	
+	private GrabManager(){}	
 	
 	public void Init(Collection<String> urltToVisit)
 	{
 		if(this.isInitialized) return;
+		this.log = Logger.getLogger("main");		
+		this.visited = new HashSet<String>();
+		this.isInitialized = false;		
 		this.frontier = new LinkedBlockingDeque<String>(urltToVisit);
+		configureManager();		
 	}
 
 	private void configureManager() {
@@ -60,83 +45,69 @@ public class GrabManager implements Runnable {
 		try {
 			prop.load(new FileInputStream(manager_properties));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.fatal(e.getMessage());
+			System.exit(-1);
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.fatal(e.getMessage());
+			System.exit(-1);
 		}
 		
 		int number_of_workers = Integer.parseInt(prop.getProperty("number_of_workers"));	
-		int max_generation = Integer.parseInt(prop.getProperty("max_generation"));
-		this.timeout = Integer.parseInt(prop.getProperty("timeout"));
+		int max_generation = Integer.parseInt(prop.getProperty("max_generation"));		
 		
 		threadPool = Executors.newFixedThreadPool(number_of_workers);
 		this.generation = new AtomicInteger(max_generation);
-		
+		log.info("manager is initialized");
 		
 	}
 
-	@Override
-	
+	@Override	
 	public void run() {	
-		if(!this.isInitialized) return;
+		if(this.isInitialized) return;
+		this.isInitialized = true;
 		new Thread(
 				new Runnable() {					
 					@Override
 					public void run() {
-						
-						// repeat until exists not visited url  
 						while (!threadPool.isShutdown()) {		
-
-							try {
-
-								// block until url arrives
-								String nonVisitedUrl = frontier.take();	
-								if(frontier.isEmpty()) log.info("frontier is empty");
-
-								log.info("visiting "+nonVisitedUrl);
+							try {								
+								String nonVisitedUrl = frontier.poll(3000,TimeUnit.MILLISECONDS);	
 								
-								visited.add(nonVisitedUrl);								
-
-								Thread.sleep(timeout);
-
-								// create another thread with new url to crawl
-								threadPool.execute(new SpyderTask(nonVisitedUrl));							
-
+								if(nonVisitedUrl!= null) 
+								{   
+									visited.add(nonVisitedUrl);								
+									threadPool.execute(new SpyderTask(nonVisitedUrl));
+								}			
+								
 							} catch (InterruptedException e) {								
 								log.error(e.getMessage());
 								shutdownAndAwaitTermination(threadPool);
 							}
-						}
+						}						
 					}
 				}).start();	
 		log.info("manager started");
 	}
 	
-	// stop GrabManager 
 	public void stop()
 	{	
 		if(!this.isInitialized) return;
+		this.isInitialized = false;
 		shutdownAndAwaitTermination(threadPool);
 	}
-		
-	// Thread pool shutdown routine
+
 	public void shutdownAndAwaitTermination(ExecutorService pool)
 	{
-		// disable new task from being submitted
 		pool.shutdown();
 		try {
-			// wait a while for existing task to terminate
-			if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
-				// cancel currently executing tasks
+			if (!pool.awaitTermination(20, TimeUnit.SECONDS)) {
 				pool.shutdownNow();
-				if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
-					System.err.println("Pool did not terminate");
+				if (!pool.awaitTermination(20, TimeUnit.SECONDS)) {
+					log.error("Pool didn't terminate");
 				}
 			}			
 		} catch (InterruptedException e) {			
-			// (Re-)Cancel if current thread also interrupted
 			pool.shutdownNow();
 			Thread.currentThread().interrupt();
 		}
@@ -163,20 +134,22 @@ public class GrabManager implements Runnable {
 
 		@Override
 		public void run() {
-			// get html string from grabber
-			log.info("job started:" + url);
+			log.info("job started :" + url);
 			String htmlResults = grabber.grab(url);
 
-			// if generation not null : find all links on page and add to frontier
 			if (generation.get() !=0) {
 				generation.decrementAndGet();
 				grabber.addLinksToFrontier(frontier,visited);				
 			}			
 			
-			// count words from html string					
-			pageWordCount = parser.parse(htmlResults);
+			try {
+				pageWordCount = parser.parse(htmlResults);
+			} catch (NullPointerException e) {
+				log.error(e.getMessage());
+				Thread.currentThread().interrupt();
+			}
 			
-			if(IndexDB.getInstance().isInitialized())
+			if(url!=null && IndexDB.getInstance().isInitialized() && pageWordCount !=null)
 			{
 				IndexDB.getInstance().save(url, pageWordCount);
 			}
