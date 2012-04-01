@@ -1,1 +1,4 @@
 /WebSpyder/src/parsed.txt
+/WebSpyder/src/*.class
+/WebSpyder/lib/*.properties
+/WebSpyder/lib/*.xml
