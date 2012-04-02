@@ -18,16 +18,33 @@ public class WebSpyder {
 	
 	private static  Collection<String> urlToVisit = new LinkedList<String>();
 	
-	public static void main(String[] args)  {
-		Execute(args);
+	public void main(String[] args)  {
+		(this.new Application(args)).run();
+	}
+	
+	private class Application implements Runnable
+	{
+		private String[] args;
+		
+		public Application(String[] args)
+		{
+			this.args = args;
+		}
+
+		@Override
+		public void run() {
+			this.Execute(args);
+		}
+		
+		private void Execute(String[] args)  {
+			initializeApp(args);		
+			processSearch();
+			stopSearch();
+		}
+		
 	}
 
-	private static void Execute(String[] args)  {
-		initializeApp(args);		
-		processSearch();
-		stopSearch();
 	
-	}
 
 	private static void initializeApp(String[] args) {
 
