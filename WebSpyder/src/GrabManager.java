@@ -70,6 +70,7 @@ public class GrabManager implements Runnable {
 				new Runnable() {					
 					@Override
 					public void run() {
+						Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 						while (!threadPool.isShutdown()) {		
 							try {								
 								String nonVisitedUrl = frontier.poll(3000,TimeUnit.MILLISECONDS);	
@@ -134,6 +135,8 @@ public class GrabManager implements Runnable {
 
 		@Override
 		public void run() {
+			
+			Thread.currentThread().setPriority(Thread.MIN_PRIORITY);			
 			log.info("job started :" + url);
 			String htmlResults = grabber.grab(url);
 
