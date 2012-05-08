@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -26,7 +25,6 @@ public class WebSpyder {
 	{
 		public static void Execute(String[] args) throws InterruptedException  {
 			initializeApp(args);		
-			processSearch();
 			stopSearch();
 		}
 
@@ -84,36 +82,6 @@ public class WebSpyder {
 			} catch (IOException e) {
 				throw new RuntimeException("Unable to load logging property "+ LOG_PROPERTIES_FILE); 
 			}
-			
-		}
-
-		private static void processSearch() {
-			
-			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-			
-			String input = null;		
-			Collection<String > results = new LinkedList<String>();
-			
-			Console console = System.console();
-			if (console == null) {
-				System.err.println("error! no console provided");
-				log.fatal("no console provided");
-				System.exit(-1);
-			}
-			
-			while (!Thread.interrupted()) {
-				System.out.println("enter phrase : ");
-				
-				input = console.readLine();
-				if(input.contains(":exit")) return;
-				
-				results = IndexDB.getInstance().search(input);
-				
-				for (String result : results) {
-					System.out.println(result);
-				}
-			}
-			
 			
 		}
 
