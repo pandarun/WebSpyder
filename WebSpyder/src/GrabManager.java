@@ -66,29 +66,24 @@ public class GrabManager implements Runnable {
 	public void run() {	
 		if(this.isInitialized) return;
 		this.isInitialized = true;
-		new Thread(
-				new Runnable() {					
-					@Override
-					public void run() {
-						Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-						while (!threadPool.isShutdown()) {		
-							try {								
-								String nonVisitedUrl = frontier.poll(3000,TimeUnit.MILLISECONDS);	
-								
-								if(nonVisitedUrl!= null) 
-								{   
-									visited.add(nonVisitedUrl);								
-									threadPool.execute(new SpyderTask(nonVisitedUrl));
-								}			
-								
-							} catch (InterruptedException e) {								
-								log.error(e.getMessage());
-								shutdownAndAwaitTermination(threadPool);
-							}
-						}						
-					}
-				}).start();	
-		log.info("manager started");
+		
+		while (!Thread.currentThread().isInterrupted()) {		
+			try {								
+				String nonVisitedUrl = frontier.poll(3000,TimeUnit.MILLISECONDS);	
+
+				if(nonVisitedUrl!= null) 
+				{   
+					visited.add(nonVisitedUrl);								
+					threadPool.execute(new SpyderTask(nonVisitedUrl));
+				}			
+
+			} catch (InterruptedException e) {								
+				log.error(e.getMessage());
+				shutdownAndAwaitTermination(threadPool);
+			}
+		}
+		shutdownAndAwaitTermination(threadPool);				
+		log.info("manager stopped");
 	}
 	
 	public void stop()
