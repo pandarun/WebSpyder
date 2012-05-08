@@ -25,7 +25,7 @@ public class WebSpyder {
 	{
 		public static void Execute(String[] args) throws InterruptedException  {
 			initializeApp(args);		
-			stopSearch();
+			
 		}
 
 		private static void initializeApp(String[] args) {
@@ -63,12 +63,7 @@ public class WebSpyder {
 			IndexDB.getInstance().InitDB();		
 			GrabManager.GetInstance().Init(urlToVisit);
 			GrabManager.GetInstance().run();
-		}
-
-		private static void stopSearch() {		
-			GrabManager.GetInstance().stop();		
-			IndexDB.getInstance().StopDB();
-		}
+		}		
 
 		private static void initializeLogger() {
 			Properties logProperties = new Properties();
