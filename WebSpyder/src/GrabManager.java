@@ -67,7 +67,7 @@ public class GrabManager implements Runnable {
 		if(this.isInitialized) return;
 		this.isInitialized = true;
 		
-		while (!Thread.currentThread().isInterrupted()) {		
+		while (!threadPool.isShutdown() && !Thread.currentThread().isInterrupted()) {		
 			try {								
 				String nonVisitedUrl = frontier.poll(3000,TimeUnit.MILLISECONDS);	
 
@@ -75,7 +75,11 @@ public class GrabManager implements Runnable {
 				{   
 					visited.add(nonVisitedUrl);								
 					threadPool.execute(new SpyderTask(nonVisitedUrl));
-				}			
+				}
+				else
+				{
+					shutdownAndAwaitTermination(threadPool);
+				}
 
 			} catch (InterruptedException e) {								
 				log.error(e.getMessage());
